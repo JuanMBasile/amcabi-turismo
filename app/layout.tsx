@@ -101,7 +101,10 @@ const travelAgencySchema = {
   priceRange: '$$',
   currenciesAccepted: 'ARS',
   paymentAccepted: 'Efectivo, Tarjeta de crédito, Tarjeta de débito, Transferencia bancaria',
-  sameAs: ['https://www.instagram.com/amcabiturismo'],
+  sameAs: [
+    'https://www.instagram.com/amcabiturismo',
+    'https://www.facebook.com/AmcabiViajesYTurismo',
+  ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
