@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Montserrat } from 'next/font/google'
 import './globals.css'
 
@@ -10,6 +10,10 @@ const montserrat = Montserrat({
   // Removed 800 (extrabold) - not used in the codebase
   weight: ['400', '500', '600', '700', '900'],
 })
+
+export const viewport: Viewport = {
+  themeColor: '#E91E8C',
+}
 
 export const metadata: Metadata = {
   title: {
@@ -110,6 +114,9 @@ const travelAgencySchema = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={montserrat.variable}>
+      <head>
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+      </head>
       <body className="font-body bg-dark text-white antialiased">
         <script
           type="application/ld+json"
