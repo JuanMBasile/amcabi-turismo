@@ -1,0 +1,56 @@
+name: Claude Auto-Fix
+
+on:
+  # Se activa cuando alguien comenta "/fix" en un PR
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    # Solo corre si el comentario contiene "/fix" y es en un PR
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/fix')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.issue.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Claude Auto-Fix
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            El usuario solicitó arreglos automáticos para este PR.
+
+            Por favor:
+            1. Corre `npm run lint` y arregla TODOS los errores de ESLint
+            2. Corre `npm run build` y arregla errores de TypeScript
+            3. Verifica que ambos comandos pasen sin errores
+            4. Haz commit de los cambios con mensaje descriptivo en inglés (conventional commits)
+
+            Reglas del proyecto (de CLAUDE.md):
+            - Zero warnings policy en ESLint
+            - TypeScript strict, sin 'any'
+            - Importaciones con @/ alias, nunca ../../
+            - Tokens de marca desde @theme
+
+            Responde en español explicando qué arreglaste.
+          claude_args: "--max-turns 10"

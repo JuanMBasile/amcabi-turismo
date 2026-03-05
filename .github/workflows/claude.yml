@@ -1,0 +1,89 @@
+name: Claude Code Assistant
+
+on:
+  # Responder a @claude en comentarios de PRs e Issues
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+  # Review automático cuando se abre/actualiza un PR
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Job 1: Responder a @claude mentions en comentarios
+  respond-to-claude-mention:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Claude lee CLAUDE.md automáticamente para entender el proyecto
+
+  # Job 2: Code Review automático en PRs
+  code-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint check
+        id: lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run build check
+        id: build
+        run: npm run build
+        continue-on-error: true
+
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Revisa este Pull Request para AMCABI Turismo siguiendo las reglas de CLAUDE.md:
+
+            ## Checklist de Review:
+            - [ ] Server Components por defecto (solo 'use client' cuando es necesario)
+            - [ ] TypeScript strict, sin 'any' ni casting injustificado
+            - [ ] Tokens de marca solamente (colores desde @theme en globals.css)
+            - [ ] Texto en español (es-AR) para todo lo visible al usuario
+            - [ ] Dual data source: maneja caso sin Sanity con fallback data
+            - [ ] Imágenes con next/image y dimensiones explícitas
+            - [ ] Accesibilidad: HTML semántico, labels, contraste WCAG AA
+
+            ## Estado del CI:
+            - Lint: ${{ steps.lint.outcome }}
+            - Build: ${{ steps.build.outcome }}
+
+            Si hay errores de lint o build, sugiere los arreglos específicos.
+            Responde en español.
+          claude_args: "--max-turns 5"
