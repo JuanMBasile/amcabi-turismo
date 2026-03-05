@@ -259,9 +259,11 @@ export default function PromoCarousel({ promos }: PromoCarouselProps) {
       )}
 
       {/* Slide counter */}
-      <div className="absolute top-4 right-4 z-20 bg-ink/60 backdrop-blur-sm text-white font-body text-xs px-2.5 py-1 rounded-full">
-        {currentIndex + 1} / {totalSlides}
-      </div>
+      {totalSlides > 0 && (
+        <div className="absolute top-4 right-4 z-20 bg-ink/60 backdrop-blur-sm text-white font-body text-xs px-2.5 py-1 rounded-full">
+          {currentIndex + 1} / {totalSlides}
+        </div>
+      )}
     </div>
   )
 }

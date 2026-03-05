@@ -49,7 +49,11 @@ export default function LottieLoader({
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    getAnimationData(variant).then(setAnimationData)
+    let cancelled = false
+    getAnimationData(variant).then((data) => {
+      if (!cancelled) setAnimationData(data)
+    })
+    return () => { cancelled = true }
   }, [variant])
 
   return (
@@ -98,7 +102,11 @@ export function InlineLoader({ size = 24 }: { size?: number }) {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    getAnimationData('transaction').then(setAnimationData)
+    let cancelled = false
+    getAnimationData('transaction').then((data) => {
+      if (!cancelled) setAnimationData(data)
+    })
+    return () => { cancelled = true }
   }, [])
 
   if (!animationData) {
