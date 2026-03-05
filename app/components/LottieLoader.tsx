@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
 // Lazy load Lottie library (~45KB) - only loads when component mounts
@@ -28,8 +29,6 @@ interface LottieLoaderProps {
   /** Additional CSS classes */
   className?: string
 }
-
-import { useState, useEffect } from 'react'
 
 /**
  * LottieLoader — Animated loader using Lottie animations
