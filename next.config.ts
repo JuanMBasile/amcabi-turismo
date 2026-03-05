@@ -32,11 +32,10 @@ const nextConfig: NextConfig = {
   /**
    * React Compiler (Stable in Next.js 16)
    *
-   * Uncomment to enable automatic memoization and optimizations.
-   * This reduces the need for manual useMemo/useCallback.
-   * Ensure all components follow React rules before enabling.
+   * Enables automatic memoization and optimizations.
+   * Reduces the need for manual useMemo/useCallback.
    */
-  // reactCompiler: true,
+  reactCompiler: true,
 
   /**
    * Experimental features

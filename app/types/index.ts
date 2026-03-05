@@ -328,6 +328,29 @@ export interface ContactResponse {
   error?: string
 }
 
+// ─── Lightweight Types for Client Components ────────────────────────────────
+
+/**
+ * Minimal departure data for BookingBar component
+ * Reduces serialization payload by ~80% compared to full Departure type
+ */
+export interface DepartureOption {
+  _id: string
+  title: string
+  departureDate: string
+}
+
+/**
+ * Transform full Departure to lightweight DepartureOption
+ */
+export function toDepartureOption(departure: Departure): DepartureOption {
+  return {
+    _id: departure._id,
+    title: departure.title,
+    departureDate: departure.departureDate,
+  }
+}
+
 // ─── Component Props Patterns ────────────────────────────────────────────────
 
 /**

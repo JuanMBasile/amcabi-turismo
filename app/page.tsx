@@ -7,6 +7,7 @@ import DestinationsGrid from './components/DestinationsGrid'
 import WhyUs from './components/WhyUs'
 import Footer from './components/Footer'
 import { getDestinations, getPromos, getDepartures, getSiteSettings } from '@/sanity/lib/fetchers'
+import { toDepartureOption } from './types'
 
 export const metadata: Metadata = {
   title: 'AMCABI Turismo | Paquetes de Viaje en Argentina',
@@ -37,7 +38,7 @@ export default async function HomePage() {
       <Header />
       <main id="main-content">
         <HeroSection destinations={destinations.slice(0, 3)} />
-        {settings.showBookingBar && <BookingBar departures={departures} />}
+        {settings.showBookingBar && <BookingBar departures={departures.map(toDepartureOption)} />}
         {settings.showPromos && <PromosSection promos={promos} />}
         {settings.showDestinations && <DestinationsGrid destinations={destinations} />}
         {settings.showWhyUs && <WhyUs />}

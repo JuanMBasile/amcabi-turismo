@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useReducer, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Promo } from '@/app/types'
@@ -19,31 +19,66 @@ const BADGE_STYLES: Record<string, string> = {
 }
 
 const AUTO_ROTATE_INTERVAL = 5000 // 5 seconds
+const MIN_SWIPE_DISTANCE = 50
+
+// ─── Reducer for carousel state ─────────────────────────────────────────────────
+interface CarouselState {
+  currentIndex: number
+  isPaused: boolean
+}
+
+type CarouselAction =
+  | { type: 'GO_TO'; index: number; total: number }
+  | { type: 'NEXT'; total: number }
+  | { type: 'PREV'; total: number }
+  | { type: 'PAUSE' }
+  | { type: 'RESUME' }
+
+function carouselReducer(state: CarouselState, action: CarouselAction): CarouselState {
+  switch (action.type) {
+    case 'GO_TO':
+      return { ...state, currentIndex: (action.index + action.total) % action.total }
+    case 'NEXT':
+      return { ...state, currentIndex: (state.currentIndex + 1) % action.total }
+    case 'PREV':
+      return { ...state, currentIndex: (state.currentIndex - 1 + action.total) % action.total }
+    case 'PAUSE':
+      return { ...state, isPaused: true }
+    case 'RESUME':
+      return { ...state, isPaused: false }
+    default:
+      return state
+  }
+}
 
 interface PromoCarouselProps {
   promos: Promo[]
 }
 
 export default function PromoCarousel({ promos }: PromoCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [state, dispatch] = useReducer(carouselReducer, {
+    currentIndex: 0,
+    isPaused: false,
+  })
+
+  // Touch tracking via ref (doesn't cause re-renders)
+  const touchRef = useRef({ start: 0, end: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
   const totalSlides = promos.length
+  const { currentIndex, isPaused } = state
 
   const goToSlide = useCallback((index: number) => {
-    setCurrentIndex((index + totalSlides) % totalSlides)
+    dispatch({ type: 'GO_TO', index, total: totalSlides })
   }, [totalSlides])
 
   const goNext = useCallback(() => {
-    goToSlide(currentIndex + 1)
-  }, [currentIndex, goToSlide])
+    dispatch({ type: 'NEXT', total: totalSlides })
+  }, [totalSlides])
 
   const goPrev = useCallback(() => {
-    goToSlide(currentIndex - 1)
-  }, [currentIndex, goToSlide])
+    dispatch({ type: 'PREV', total: totalSlides })
+  }, [totalSlides])
 
   // Auto-rotate
   useEffect(() => {
@@ -53,28 +88,23 @@ export default function PromoCarousel({ promos }: PromoCarouselProps) {
     return () => clearInterval(interval)
   }, [isPaused, goNext, totalSlides])
 
-  // Touch handlers for swipe
-  const minSwipeDistance = 50
-
+  // Touch handlers for swipe (using refs to avoid re-renders)
   const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
+    touchRef.current = { start: e.targetTouches[0].clientX, end: 0 }
   }
 
   const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
+    touchRef.current.end = e.targetTouches[0].clientX
   }
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
+    const { start, end } = touchRef.current
+    if (!start || !end) return
 
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
-
-    if (isLeftSwipe) {
+    const distance = start - end
+    if (distance > MIN_SWIPE_DISTANCE) {
       goNext()
-    } else if (isRightSwipe) {
+    } else if (distance < -MIN_SWIPE_DISTANCE) {
       goPrev()
     }
   }
@@ -101,8 +131,8 @@ export default function PromoCarousel({ promos }: PromoCarouselProps) {
     <div
       ref={containerRef}
       className="relative"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseEnter={() => dispatch({ type: 'PAUSE' })}
+      onMouseLeave={() => dispatch({ type: 'RESUME' })}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

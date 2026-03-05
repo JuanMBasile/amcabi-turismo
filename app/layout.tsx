@@ -6,7 +6,9 @@ const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800', '900'],
+  // Weights: normal, medium, semibold, bold, black
+  // Removed 800 (extrabold) - not used in the codebase
+  weight: ['400', '500', '600', '700', '900'],
 })
 
 export const metadata: Metadata = {

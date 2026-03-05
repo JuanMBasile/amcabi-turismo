@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import ConfettiDecor from './ConfettiDecor'
 import type { Destination } from '@/app/types'
 
@@ -132,12 +133,13 @@ export default function HeroSection({ destinations }: HeroSectionProps) {
                   className={`${FLOAT_CLASSES[i] ?? 'card-float-a'} absolute w-[220px] xl:w-[235px] rounded-2xl overflow-hidden shadow-2xl shadow-black/60`}
                   style={{ zIndex: i + 1, top: '50%', left: '50%', marginTop: '-90px', marginLeft: '-110px' }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={dest.image}
                     alt={dest.imageAlt}
+                    width={235}
+                    height={145}
                     className="w-full h-[145px] object-cover"
-                    loading="lazy"
+                    unoptimized
                   />
                   <div className="bg-white px-4 py-3">
                     <div className="flex items-center gap-1.5 mb-0.5">

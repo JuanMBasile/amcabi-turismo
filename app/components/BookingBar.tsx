@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Departure } from '@/app/types'
+import type { DepartureOption } from '@/app/types'
 
 interface Props {
-  departures: Departure[]
+  /** Lightweight departure data - only fields needed for the selects */
+  departures: DepartureOption[]
 }
 
 function formatDate(iso: string) {

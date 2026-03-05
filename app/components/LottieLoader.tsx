@@ -1,8 +1,22 @@
 'use client'
 
-import Lottie from 'lottie-react'
-import airplaneLoaderData from '@/app/assets/lottie/airplane-loader.json'
-import airplaneTransactionData from '@/app/assets/lottie/airplane-transaction.json'
+import dynamic from 'next/dynamic'
+
+// Lazy load Lottie library (~45KB) - only loads when component mounts
+const Lottie = dynamic(() => import('lottie-react').then((mod) => mod.default), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse bg-pink/20 rounded-full" />
+  ),
+})
+
+// Lazy load animation data
+const getAnimationData = async (variant: 'loader' | 'transaction') => {
+  if (variant === 'transaction') {
+    return (await import('@/app/assets/lottie/airplane-transaction.json')).default
+  }
+  return (await import('@/app/assets/lottie/airplane-loader.json')).default
+}
 
 interface LottieLoaderProps {
   /** Which animation to show */
@@ -15,12 +29,17 @@ interface LottieLoaderProps {
   className?: string
 }
 
+import { useState, useEffect } from 'react'
+
 /**
  * LottieLoader — Animated loader using Lottie animations
  *
  * Variants:
  * - loader: For page loading states (airplaneLoader.json)
  * - transaction: For booking/reservation submissions (Airplane.json)
+ *
+ * Performance: Lottie library and animation data are lazy-loaded
+ * to reduce initial bundle size by ~45KB
  */
 export default function LottieLoader({
   variant = 'loader',
@@ -28,16 +47,27 @@ export default function LottieLoader({
   message,
   className = '',
 }: LottieLoaderProps) {
-  const animationData = variant === 'transaction' ? airplaneTransactionData : airplaneLoaderData
+  const [animationData, setAnimationData] = useState<object | null>(null)
+
+  useEffect(() => {
+    getAnimationData(variant).then(setAnimationData)
+  }, [variant])
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      <Lottie
-        animationData={animationData}
-        loop
-        autoplay
-        style={{ width: size, height: size }}
-      />
+      {animationData ? (
+        <Lottie
+          animationData={animationData}
+          loop
+          autoplay
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        <div
+          className="animate-pulse bg-pink/20 rounded-full"
+          style={{ width: size, height: size }}
+        />
+      )}
       {message && (
         <p className="font-body text-ink-muted text-sm mt-4 animate-pulse">
           {message}
@@ -66,9 +96,24 @@ export function FullPageLoader({ message = 'Cargando...' }: { message?: string }
  * InlineLoader — Smaller loader for inline/button states
  */
 export function InlineLoader({ size = 24 }: { size?: number }) {
+  const [animationData, setAnimationData] = useState<object | null>(null)
+
+  useEffect(() => {
+    getAnimationData('transaction').then(setAnimationData)
+  }, [])
+
+  if (!animationData) {
+    return (
+      <div
+        className="animate-spin rounded-full border-2 border-pink border-t-transparent"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+
   return (
     <Lottie
-      animationData={airplaneTransactionData}
+      animationData={animationData}
       loop
       autoplay
       style={{ width: size, height: size }}
